@@ -11,7 +11,7 @@ import java.util.Map;
 @Component
 public class SCBModule extends DefaultModule {
 
-    @Value("${scb.payment.url}")
+    @Value("${scb.payment.action.url}")
     private String actionUrl;
 
     public SCBModule() {

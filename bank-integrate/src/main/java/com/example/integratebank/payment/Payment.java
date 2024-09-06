@@ -18,9 +18,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -51,10 +53,12 @@ public class Payment {
     private BigDecimal amount;
 
     @Getter
+    @Setter
     @Column(name = "fee")
     private BigDecimal fee;
 
     @Getter
+    @Setter
     @Column(name = "paid_amount")
     private BigDecimal paidAmount;
 
@@ -64,14 +68,28 @@ public class Payment {
     private PaymentProvider provider;
 
     @Getter
+    @Setter
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private PaymentStatus status = PaymentStatus.PENDING;
 
+    /**
+     * For transactionId of bank
+     */
+    @Setter
+    @Column(name = "provider_ref")
+    private String providerRef;
+
+    @Getter
     @CreationTimestamp
     @Column(name = "create_date", nullable = false, updatable = false)
     private LocalDateTime createDate;
+
+    @Getter
+    @UpdateTimestamp
+    @Column(name = "update_date")
+    private LocalDateTime updateDate;
 
     public Payment(String txPrefix, BigDecimal amount, BigDecimal fee, BigDecimal paidAmount,
                    PaymentProvider provider, PaymentStatus status) {

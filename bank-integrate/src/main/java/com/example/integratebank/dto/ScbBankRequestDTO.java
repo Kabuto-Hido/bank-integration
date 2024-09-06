@@ -17,7 +17,6 @@ import java.util.List;
 public class ScbBankRequestDTO {
     private String merchantId;
     private PaymentInfo paymentInfo;
-    private IppInfo ippInfo;
     private List<OtherInfo> otherInfo;
     private String cardInfo;
 
@@ -31,15 +30,6 @@ public class ScbBankRequestDTO {
         private BigDecimal amount;
         private String customerId;
         private String settlementMode;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class IppInfo {
-        private Integer ippType;
-        private String ippPlanName;
-        private Integer ippMonth;
     }
 
     @Data
