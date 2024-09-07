@@ -90,6 +90,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public SCBConfirmDTO submitPayment(CardInfoRequestDTO dto) {
+        if (!dto.getProvider().equals(PaymentProvider.SCB)) {
+            throw new BadRequest("Only SCB providers are supported");
+        }
+
         Payment payment = paymentRepository.findByTransactionId(dto.getTransactionId())
                 .orElseThrow(() -> new BadRequest("Payment not found"));
 
@@ -209,6 +213,7 @@ public class PaymentServiceImpl implements PaymentService {
 
                              payment.setStatus(datafeedDTO.getPaymentStatus());
                              payment.setProviderRef(txnNumber);
+                             paymentRepository.save(payment);
                          });
     }
 

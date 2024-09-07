@@ -33,6 +33,6 @@ public class CardInfoRequestDTO {
     @Pattern(regexp = "(0[1-9]|1[0-2])", message = "Expiration month must be in MM format")
     private String epMonth;
 
-    @Pattern(regexp = "\\d{4}", message = "Expiration year must be in YYYY format")
+    @Pattern(regexp = "\\d{2}", message = "Expiration year must be in YY format")
     private String epYear;
 }

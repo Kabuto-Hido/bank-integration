@@ -68,15 +68,21 @@ public class SCBClient {
     private <T> Optional<String> request(String url, T dto) {
         Request request = buildPostRequest(url, dto);
 
-        log.info("Pay Solutions request: {}", request);
+        log.info("SCB request: {}", request);
         try (Response response = client.newCall(request).execute()) {
             final int code = response.code();
             final ResponseBody body = response.body();
             final String bodyString = body != null ? body.string() : null;
-            log.info("Pay Solutions response code: {}, body: {}", code, bodyString);
-            return Optional.ofNullable(bodyString);
+
+            // Check if body is empty or null
+            if (bodyString == null || bodyString.trim().isEmpty()) {
+                log.warn("SCB response body is empty");
+                return Optional.empty();
+            }
+            log.info("SCB response code: {}, body: {}", code, bodyString);
+            return Optional.of(bodyString);
         } catch (IOException e) {
-            log.error("Can't get response from Pay Solutions", e);
+            log.error("Can't get response from SCB", e);
             return Optional.empty();
         }
     }

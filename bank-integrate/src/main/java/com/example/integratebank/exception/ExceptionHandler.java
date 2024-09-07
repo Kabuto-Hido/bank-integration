@@ -25,10 +25,19 @@ public class ExceptionHandler {
                                                      MessageConstants.SYSTEM_ERROR));
     }
 
+    @org.springframework.web.bind.annotation.ExceptionHandler(BadRequest.class)
+    public ResponseEntity<ExceptionResponse> handleBadRequest(BadRequest e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                                                         e.getMessage()));
+    }
+
     @org.springframework.web.bind.annotation.ExceptionHandler(DuplicateException.class)
-    public ResponseEntity<String> handleException(DuplicateException e) {
+    public ResponseEntity<ExceptionResponse> handleDuplicateException(DuplicateException e) {
         log.info("", e);
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(new ExceptionResponse(HttpStatus.CONFLICT.value(),
+                                                        e.getMessage()));
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)

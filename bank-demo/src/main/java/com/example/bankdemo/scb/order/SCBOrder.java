@@ -1,17 +1,19 @@
-package com.example.integratebank.payment;
+package com.example.bankdemo.scb.order;
 
-import com.example.integratebank.enumeration.PaymentProvider;
-import com.example.integratebank.enumeration.PaymentStatus;
+import com.example.bankdemo.scb.enumeration.SCBStatus;
+import com.example.bankdemo.scb.merchant.SCBMerchant;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
@@ -19,7 +21,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -31,57 +32,45 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "payment")
+@Table(name = "scb_order")
 @Entity
 @DynamicInsert
 @DynamicUpdate
-public class Payment {
-    @Id
+@Data
+public class SCBOrder {
+
     @Getter
+    @Id
     @Access(AccessType.PROPERTY)
-    @SequenceGenerator(name = "payment_id_generator", sequenceName = "payment_id_seq", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "payment_id_generator")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "order_no", unique = true)
+    private String orderNo;
 
     @Transient
     private String txPrefix;
 
-    @Getter
     @Column(name = "transaction_id", unique = true)
     private String transactionId;
 
-    @Getter
     @Column(name = "amount")
     private BigDecimal amount;
 
-    @Getter
-    @Setter
-    @Column(name = "fee")
-    private BigDecimal fee;
+    @Column(name = "customer_id")
+    private String customerId;
 
-    @Getter
-    @Setter
-    @Column(name = "paid_amount")
-    private BigDecimal paidAmount;
-
-    @Getter
-    @Column(name = "provider")
-    @Enumerated(EnumType.STRING)
-    private PaymentProvider provider;
-
-    @Getter
-    @Setter
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private PaymentStatus status = PaymentStatus.PENDING;
+    private SCBStatus status = SCBStatus.PENDING;
 
-    /**
-     * For transactionId of bank
-     */
-    @Setter
-    @Column(name = "provider_ref")
-    private String providerRef;
+    @Column(name = "status_code")
+    private String statusCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "merchant_id")
+    private SCBMerchant scbMerchant;
 
     @Getter
     @CreationTimestamp
@@ -93,14 +82,15 @@ public class Payment {
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 
-    public Payment(String txPrefix, BigDecimal amount, BigDecimal fee, BigDecimal paidAmount,
-                   PaymentProvider provider, PaymentStatus status) {
+    public SCBOrder(String orderNo, String txPrefix, BigDecimal amount, String customerId,
+                    SCBStatus status, String statusCode, SCBMerchant scbMerchant) {
+        this.orderNo = orderNo;
         this.txPrefix = txPrefix;
         this.amount = amount;
-        this.provider = provider;
+        this.customerId = customerId;
         this.status = status;
-        this.fee = fee;
-        this.paidAmount = paidAmount;
+        this.statusCode = statusCode;
+        this.scbMerchant = scbMerchant;
     }
 
     public void setId(Long id) {
