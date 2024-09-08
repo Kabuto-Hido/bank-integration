@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment</title>
+    <style>
+        /* Basic form styling */
+        #payFormCCard {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        /* Styling for form groups */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        /* Styling for form labels and paragraphs */
+        .form-group p {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        /* Styling for input fields */
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .custom-form {
+            margin-right: 10px;
+        }
+
+        /* Styling for select elements */
+        select.form-control {
+            width: calc(50% - 10px);
+            display: inline-block;
+        }
+
+        /* Styling for required field indicators */
+        #star_mm, #star_yyyy, #star_cvv {
+            color: red;
+            margin-left: 3px;
+        }
+
+        /* Styling for the submit button */
+        #pay_btn {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #pay_btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive styling */
+        @media (max-width: 768px) {
+            .form-group {
+                margin-bottom: 10px;
+            }
+
+            select.form-control {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            #pay_btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <form id="payFormCCard" action="" method="POST" name="payFormCCard"
+          th:action="@{/confirm-pay}" th:object="${cardInfo}">
+        <input type="hidden" name="transactionId" th:value="${data['orderNumber']}"/>
+        <input type="hidden" name="provider" th:value="${bankProvider}"/>
+        <div class="carousel-item active">
+            <div class="form-group">
+                <p>Card Number</p>
+                <input id="cardNo_show" type="text"
+                       placeholder="Card number" class="form-control" th:field="*{cardNo}"/>
+            </div>
+            <div class="form-group row">
+                <div>
+                    <p>Expiry date</p>
+                    <div>
+                        <select name="epMonth" id="epMonth_show"
+                                onchange="checkCardExpireMonth()" th:field="*{epMonth}">
+                            <option value="0">MM</option>
+                            <option value="01">01</option>
+                            <option value="02">02</option>
+                            <option value="03">03</option>
+                            <option value="04">04</option>
+                            <option value="05">05</option>
+                            <option value="06">06</option>
+                            <option value="07">07</option>
+                            <option value="08">08</option>
+                            <option value="09">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
+                        <span id="star_mm"
+                              style="color:red; margin-left: 3px; display: none">*</span>
+                        <select style="margin-left: 10px" name="epYear" id="epYear" onchange="checkCardExpireYear()"
+                                th:field="*{epYear}">
+                            <option value="0">YY</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                        </select>
+                        <span id="star_yyyy" style="color:red; margin-left: 3px; display: none">*</span>
+                    </div>
+                </div>
+                <div class="col-4 col-sm-3" style="padding-right: 0">
+                    <p>CVC / CVV</p>
+                    <div class="d-flex">
+                        <input type="text" class="custom-form form-control" id="securityCode"
+                               name="securityCode" onkeyup="checkCardCVV()" maxlength="4"
+                               autocomplete="off"
+                               placeholder="456" th:field="*{securityCode}"/>
+                        <span id="star_cvv"
+                              style="color:red; margin-left: 3px; display: none">*</span>
+                    </div>
+                </div>
+            </div>
+            <button id="pay_btn" class="btn btn-lg btn-primary w-100 position-relative responsive-btn"
+                    type="submit">Submit
+            </button>
+        </div>
+    </form>
+<script>
+    function checkCardExpireMonth() {
+        updateCardExpireMonthErrorVisible(!validateCardExpireMonth());
+    }
+    function checkCardExpireYear() {
+        updateCardExpireYearErrorVisible(!validateCardExpireYear());
+    }
+    function checkCardCVV() {
+        updateCardCVVErrorVisible(!validateCardCVV());
+    }
+
+    function updateCardExpireYearErrorVisible(showError) {
+        updateVisible($('#star_yyyy'), showError);
+    }
+    function updateCardExpireMonthErrorVisible(showError) {
+        updateVisible($('#star_mm'), showError);
+    }
+    function updateCardCVVErrorVisible(showError) {
+        updateVisible($('#star_cvv'), showError);
+    }
+
+    function updateVisible(selector, show) {
+        if (!selector.length) {
+            return;
+        }
+        if (show) {
+            selector.show();
+        } else {
+            selector.hide();
+        }
+    }
+    function validateCardExpireYear() {
+        // valid if didn't exist
+        let selector = $('#epYear');
+        return !selector.length || selector.val() !== '0';
+    }
+    function validateCardExpireMonth() {
+        // valid if didn't exist
+        let selector = $('#epMonth_show');
+        return !selector.length || selector.val() !== '0';
+    }
+    function validateCardCVV() {
+        // valid if didn't exist
+        let selector = $('#securityCode');
+        return !selector.length || selector.val() !== '';
+    }
+</script>
+</body>
+</html>
