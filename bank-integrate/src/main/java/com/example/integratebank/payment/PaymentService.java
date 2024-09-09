@@ -10,4 +10,6 @@ public interface PaymentService {
     Map<String, String> createPayment(PaymentDTO dto);
 
     SCBConfirmDTO submitPayment(CardInfoRequestDTO dto);
+
+    void getInquiry(String transactionId);
 }

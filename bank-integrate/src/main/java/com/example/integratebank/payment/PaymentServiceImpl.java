@@ -62,12 +62,20 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${scb.merchant.id}")
     private String scbMerchantId;
 
-    @Value("${scb.return.url}")
-    private String scbReturnUrl;
+    @Value("${scb.fe.return.url}")
+    private String scbFeReturnUrl;
+
+    @Value("${scb.be.return.url}")
+    private String scbBeReturnUrl;
 
     @Value("${scb.payment.url}")
     private String scbActionUrl;
 
+    /**
+     * create payment transaction
+     * @param dto PaymentDTO
+     * @return Map<String, String>
+     */
     //Create payment
     @Transactional
     @Override
@@ -88,6 +96,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     }
 
+    /**
+     * In case insert card in your page
+     * submit payment with card information
+     * @param dto CardInfoRequestDTO
+     * @return SCBConfirmDTO
+     */
     @Override
     public SCBConfirmDTO submitPayment(CardInfoRequestDTO dto) {
         if (!dto.getProvider().equals(PaymentProvider.SCB)) {
@@ -115,8 +129,13 @@ public class PaymentServiceImpl implements PaymentService {
                 "A"
         );
 
+        /* Custom return url to direct to your page
+        * Fe URL -> UI
+        * Be URL -> call datafeed -> check status transaction
+        * */
         List<ScbBankRequestDTO.OtherInfo> otherInfos = new ArrayList<>();
-        otherInfos.add(new ScbBankRequestDTO.OtherInfo("frontendReturnUrl", scbReturnUrl));
+        otherInfos.add(new ScbBankRequestDTO.OtherInfo("frontendReturnUrl", scbFeReturnUrl));
+        otherInfos.add(new ScbBankRequestDTO.OtherInfo("backendReturnUrl", scbBeReturnUrl));
 
         ScbBankRequestDTO scbBankRequestDTO = new ScbBankRequestDTO(
                 scbMerchantId, paymentInfo, otherInfos, cardEncrypt
@@ -130,31 +149,33 @@ public class PaymentServiceImpl implements PaymentService {
             // update fail status
             updateStatus(DatafeedDTO.builder().transactionId(dto.getTransactionId())
                                     .paymentStatus(PaymentStatus.FAIL).build(), null);
-            return new SCBConfirmDTO(false);
+            return new SCBConfirmDTO(false, PaymentStatus.FAIL.name());
         }
 
         return processBankResponse(dto.getTransactionId(),responseDTOOptional.get());
     }
 
     /**
-     * @param transactionId
-     * @param bankResponse
      * Check response from bank
+     * @param transactionId String
+     * @param bankResponse ScbPurchaseResponseDTO
+     * return SCBConfirmDTO
      */
     private SCBConfirmDTO processBankResponse(String transactionId, ScbPurchaseResponseDTO bankResponse) {
         ScbPurchaseResponseDTO.AuthorizeResponse authorizeResponse = bankResponse.getData().getAuthorizeResponse();
         if (Objects.nonNull(authorizeResponse)) {
-            if (authorizeResponse.getStatusCode().equals("1000")) {
+            if (authorizeResponse.getStatusCode().equals("1001")) {
                 // get inquiry by call api from bank
                 getInquiry(transactionId);
-                return new SCBConfirmDTO(true);
+                return new SCBConfirmDTO(true, PaymentStatus.COMPLETE.name());
             }
         }
 
-        return new SCBConfirmDTO(false);
+        return new SCBConfirmDTO(false, PaymentStatus.PENDING.name());
     }
 
-    private void getInquiry(String transactionId) {
+    @Override
+    public void getInquiry(String transactionId) {
         // prepare inquiry request dto
         SCBInquiryRequestDTO scbInquiryRequestDTO = new SCBInquiryRequestDTO(scbMerchantId, transactionId);
 
@@ -166,9 +187,9 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     /**
-     * @param transactionId
-     * @param scbInquiryResponseDTO
      * handle datafeed and update to payment
+     * @param transactionId String
+     * @param scbInquiryResponseDTO SCBInquiryResponseDTO
      */
     private void processDataFeed(String transactionId, SCBInquiryResponseDTO scbInquiryResponseDTO) {
         if (Objects.isNull(scbInquiryResponseDTO.getData())) {
@@ -197,6 +218,11 @@ public class PaymentServiceImpl implements PaymentService {
         updateStatus(datafeedDTO, data.getTxnNumber());
     }
 
+    /**
+     * update status when get inquiry from bank
+     * @param datafeedDTO DatafeedDTO
+     * @param txnNumber String
+     */
     private void updateStatus(DatafeedDTO datafeedDTO, String txnNumber) {
         paymentRepository.findByTransactionId(datafeedDTO.getTransactionId())
                          .ifPresent(payment -> {
@@ -217,6 +243,11 @@ public class PaymentServiceImpl implements PaymentService {
                          });
     }
 
+    /**
+     * mapping status code of bank to payment status
+     * @param statusCode String
+     * @return PaymentStatus
+     */
     private PaymentStatus getPaymentStatus(String statusCode) {
         return switch (statusCode) {
             case "1002", "4002" -> PaymentStatus.FAIL;

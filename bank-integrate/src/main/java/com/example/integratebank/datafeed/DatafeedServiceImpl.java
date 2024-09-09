@@ -14,6 +14,10 @@ public class DatafeedServiceImpl implements DatafeedService {
 
     private final DatafeedRepository datafeedRepository;
 
+    /**
+     * save datafeed
+     * @param datafeedDTO DatafeedDTO
+     */
     @Override
     public void addDataFeed(DatafeedDTO datafeedDTO) {
         try {

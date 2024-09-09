@@ -1,15 +1,19 @@
 package com.example.bankdemo.scb.payment;
 
 import com.example.bankdemo.exception.NotFoundException;
+import com.example.bankdemo.scb.client.ReturnClient;
 import com.example.bankdemo.scb.dto.PaymentInquiryRequestDTO;
 import com.example.bankdemo.scb.dto.PaymentInquiryResponseDTO;
 import com.example.bankdemo.scb.dto.PaymentRequestDTO;
 import com.example.bankdemo.scb.dto.PaymentResponseDTO;
+import com.example.bankdemo.scb.dto.ReturnDataFeedDTO;
 import com.example.bankdemo.scb.enumeration.SCBStatus;
 import com.example.bankdemo.scb.merchant.SCBMerchant;
 import com.example.bankdemo.scb.merchant.SCBMerchantService;
 import com.example.bankdemo.scb.order.SCBOrder;
 import com.example.bankdemo.scb.order.SCBOrderService;
+import com.example.bankdemo.scb.util.AESHelper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +23,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +32,10 @@ public class PaymentServiceImpl implements PaymentService {
     private final SCBMerchantService scbMerchantService;
 
     private final SCBOrderService scbOrderService;
+
+    private final AESHelper aesHelper;
+
+    private final ReturnClient client;
 
     public final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
@@ -48,15 +57,36 @@ public class PaymentServiceImpl implements PaymentService {
                                              .multiply(fee).divide(ONE_HUNDRED, MC);
         BigDecimal amount = paymentRequestDTO.getPaymentInfo().getAmount().add(feeValue, MC);
 
+        // decrypt card info
+        HashMap<String, String> cardInfo = aesHelper.decryptObject(paymentRequestDTO.getCardInfo(),
+                                                                   new TypeReference<>() {
+                                                                   });
+
+        SCBStatus scbStatus = SCBStatus.PENDING;
+        String statusCode = "1003";
+        if (cardInfo.containsKey("cardNumber")) {
+            String cardNumber = cardInfo.get("cardNumber");
+            if (cardNumber.startsWith("356")) {
+                scbStatus = SCBStatus.SUCCESS;
+                statusCode ="1001";
+            }
+            else if (cardNumber.startsWith("456")) {
+                scbStatus = SCBStatus.FAIL;
+                statusCode ="1002";
+            }
+        }
+
         SCBOrder scbOrder = scbOrderService.save(new SCBOrder(
                 paymentRequestDTO.getPaymentInfo().getOrderNumber(),
                 generatePrefixTrx(),
                 amount,
                 paymentRequestDTO.getPaymentInfo().getCustomerId(),
-                SCBStatus.SUCCESS,
-                "1001",
+                scbStatus,
+                statusCode,
                 scbMerchant
         ));
+
+        callbackDataFeed(paymentRequestDTO, scbMerchant, scbOrder, statusCode, scbStatus);
 
         //init response
         PaymentResponseDTO.BankStatus bankStatus = PaymentResponseDTO.BankStatus.builder()
@@ -66,8 +96,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentResponseDTO.AuthorizeResponse authorizeResponse = new PaymentResponseDTO.AuthorizeResponse(
                 scbOrder.getTransactionId(),
-                "1000",
-                SCBStatus.SUCCESS.name(),
+                statusCode,
+                scbStatus.name(),
                 Collections.emptyList()
         );
 
@@ -77,6 +107,27 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
         return PaymentResponseDTO.builder().status(bankStatus).data(dataResponse).build();
+    }
+
+    private void callbackDataFeed(PaymentRequestDTO paymentRequestDTO, SCBMerchant scbMerchant, SCBOrder scbOrder,
+                           String statusCode, SCBStatus scbStatus) {
+        String backendReturnUrlValue = paymentRequestDTO.getOtherInfo().stream()
+                                                        .filter(info -> "backendReturnUrl".equals(info.getKey()))
+                                                        .map(PaymentRequestDTO.OtherInfo::getValue)
+                                                        .findFirst()
+                                                        .orElse(scbMerchant.getBeReturnURL());
+        if (backendReturnUrlValue == null) {
+            return;
+        }
+
+        ReturnDataFeedDTO.AuthorizeResponse returnResponse = new ReturnDataFeedDTO.AuthorizeResponse(scbOrder.getTransactionId(),
+                                                                                                     statusCode,
+                                                                                                     scbStatus.name(),
+                                                                                                     scbOrder.getOrderNo(),
+                                                                                                     Collections.emptyList());
+        ReturnDataFeedDTO.DataResponse responseData = new ReturnDataFeedDTO.DataResponse(scbMerchant.getMerchantId(), returnResponse);
+        ReturnDataFeedDTO returnDataFeedDTO = new ReturnDataFeedDTO(responseData);
+        client.returnDataFeed(backendReturnUrlValue, returnDataFeedDTO);
     }
 
     @Override
@@ -103,6 +154,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         return PaymentInquiryResponseDTO.builder().status(bankStatus).data(inquiryData).build();
     }
+
 
     private void authorizationPayment(String apiKey, String secretKey, SCBMerchant scbMerchant) {
         if (!scbMerchant.getApiKey().equals(apiKey) ||

@@ -50,6 +50,12 @@ public class SCBMerchant {
     @Column(name = "fee")
     private BigDecimal fee;
 
+    @Column(name = "fe_return_url")
+    private String feReturnURL;
+
+    @Column(name = "be_return_url")
+    private String beReturnURL;
+
     @OneToMany(mappedBy = "scbMerchant")
     private final List<SCBOrder> orders = Collections.emptyList();
 

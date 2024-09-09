@@ -47,11 +47,7 @@ public class PaymentUIController {
     @PostMapping("/confirm-pay")
     public String confirmPay(Model model, @ModelAttribute("cardInfo") CardInfoRequestDTO dto) {
         SCBConfirmDTO scbConfirmDTO = paymentService.submitPayment(dto);
-        if (scbConfirmDTO.isSuccess()) {
-            model.addAttribute("status", "success");
-        } else {
-            model.addAttribute("status", "failed");
-        }
+        model.addAttribute("status", scbConfirmDTO.getStatus());
         return "index";
     }
 }

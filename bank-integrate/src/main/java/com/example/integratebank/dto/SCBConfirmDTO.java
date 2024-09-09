@@ -9,4 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SCBConfirmDTO {
     private boolean success;
+
+    private String status;
 }
