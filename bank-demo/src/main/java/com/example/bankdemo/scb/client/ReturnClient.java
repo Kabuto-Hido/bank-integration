@@ -1,9 +1,9 @@
 package com.example.bankdemo.scb.client;
 
 import com.example.bankdemo.scb.dto.ReturnDataFeedDTO;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -14,6 +14,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -28,14 +29,34 @@ public class ReturnClient {
     }
 
     public void returnDataFeed(String url, ReturnDataFeedDTO dto) {
-        request(url, dto);
+        postRequest(url, dto);
     }
 
-    private <T> Optional<String> request(String url, T dto) {
+    public void callFeReturnURL(String url, Map<String, String> params) {
+        getRequest(url, params);
+    }
+
+    private <T> Optional<String> postRequest(String url, T dto) {
         Request request = buildPostRequest(url, dto);
 
         try (Response response = client.newCall(request).execute()) {
-            final int code = response.code();
+            final ResponseBody body = response.body();
+            final String bodyString = body != null ? body.string() : null;
+
+            // Check if body is empty or null
+            if (bodyString == null || bodyString.trim().isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(bodyString);
+        } catch (IOException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<String> getRequest(String url, Map<String, String> params) {
+        Request request = buildGetRequest(url, params);
+
+        try (Response response = client.newCall(request).execute()) {
             final ResponseBody body = response.body();
             final String bodyString = body != null ? body.string() : null;
 
@@ -63,5 +84,34 @@ public class ReturnClient {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Request buildGetRequest(String url, Map<String, String> params) {
+        try {
+
+            HttpUrl.Builder urlBuilder = buildUrlWithParams(url, params);
+            String finalUrl = urlBuilder.build().toString();
+
+            // set header following documents
+            return new Request.Builder()
+                    .url(finalUrl)
+                    .header("Content-Type", "application/json")
+                    .get()
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static HttpUrl.Builder buildUrlWithParams(String url, Map<String, String> params) {
+        HttpUrl httpUrl  = HttpUrl.parse(url);
+        if (httpUrl == null) {
+            throw new RuntimeException("Invalid URL");
+        }
+        HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
+        if (params != null && !params.isEmpty()) {
+            params.forEach(urlBuilder::addQueryParameter);
+        }
+        return urlBuilder;
     }
 }

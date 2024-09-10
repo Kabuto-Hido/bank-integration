@@ -4,14 +4,32 @@
     <meta charset="UTF-8">
     <title>Payment</title>
     <style>
+        body {
+            background-color: #B5EAEA;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
         /* Basic form styling */
         #payFormCCard {
             max-width: 600px;
-            margin: auto;
+            width: 100%;
             padding: 20px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            background-color: #f9f9f9;
+            background-color: #F4FFFF;
         }
 
         /* Styling for form groups */
@@ -86,6 +104,7 @@
     </style>
 </head>
 <body>
+<div class="center-container">
     <form id="payFormCCard" action="" method="POST" name="payFormCCard"
           th:action="@{/confirm-pay}" th:object="${cardInfo}">
         <input type="hidden" name="transactionId" th:value="${data['orderNumber']}"/>
@@ -124,6 +143,8 @@
                             <option value="24">24</option>
                             <option value="25">25</option>
                             <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
                         </select>
                         <span id="star_yyyy" style="color:red; margin-left: 3px; display: none">*</span>
                     </div>
@@ -145,6 +166,7 @@
             </button>
         </div>
     </form>
+</div>
 <script>
     function checkCardExpireMonth() {
         updateCardExpireMonthErrorVisible(!validateCardExpireMonth());

@@ -2,9 +2,130 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Payment</title>
+    <style>
+        /* Global Styles */
+        body {
+            background-color: #B5EAEA; /* Light blue background color */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Wrapper Styles */
+        #wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            max-width: 800px; /* Adjust as needed */
+        }
+
+        .form-section {
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background-color: #F4FFFF; /* Light background color for form card */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .heading-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .icon-check-circle-o {
+            font-size: 24px;
+            color: #28c358;
+            margin-right: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+            text-align: center;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .info-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .info-list .title {
+            font-weight: bold;
+        }
+
+        .info-list .value {
+            color: #333;
+        }
+
+        .info-list .value.thai-format {
+            font-size: 18px;
+            color: #28c358;
+        }
+
+    </style>
 </head>
 <body>
-    <p th:text="${status}">Pending...</p>
+    <div id="wrapper" class="payment-page">
+        <div class="content-wrapper">
+            <main id="main">
+                <div class="form-section container-fluid">
+                    <form action="#" class="form-card card payment-success">
+                        <div class="card-body">
+                            <div class="heading-bar">
+                                <i class="icon-check-circle-o"></i>
+                                <h1>Payment Success</h1>
+                            </div>
+                            <ul class="info-list">
+                                <li>
+                                    <strong class="title">Date and Time</strong>
+                                    <strong class="value" th:text="${datetime}">datetime</strong>
+                                </li>
+                                <li>
+                                    <strong class="title">Sold by</strong>
+                                    <strong class="value">Testing</strong>
+                                </li>
+                                <li>
+                                    <strong class="title">Transaction ID</strong>
+                                    <strong class="value" th:text="${transactionId}">idpay</strong>
+                                </li>
+                                <li>
+                                    <strong class="title">Amount</strong>
+                                    <strong class="value" style="color: #28c358;"><span
+                                            class="thai-format" th:text="${amount}">amount</span></strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
 </body>
 </html>

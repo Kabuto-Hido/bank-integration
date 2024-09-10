@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment</title>
+    <style>
+        /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #B5EAEA;
+        }
+
+        .overflow {
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        .mt-3 {
+            margin-top: 20px;
+        }
+
+        /* Back button styling */
+        .col-2 a img {
+            width: 30px;
+            height: 30px;
+        }
+
+        .col-10 {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .rotated-text__inner-hor {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #333;
+        }
+
+        /* Image container for the logo */
+        .login-logo {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .login-logo img {
+            max-width: 100px;
+        }
+
+        /* Error message styling */
+        h3 {
+            color: #dc3545;
+            text-align: center;
+        }
+
+        /* Media query for responsiveness */
+        @media (max-width: 768px) {
+            .col-lg-10 {
+                margin-top: 20px;
+                text-align: center;
+            }
+
+            .col-lg-2 {
+                display: none;
+            }
+
+            .rotated-text__inner-hor {
+                font-size: 18px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="overflow">
+        <div class="container">
+            <div class="mt-3">
+                <div class="row">
+                    <div class="col-lg-2 col-md-2 col-sm-4"></div>
+                    <div class="col-lg-10">
+                        <div class="login-logo">
+                            <img src="https://cdn-icons-png.flaticon.com/512/6478/6478111.png" alt="Testing"/>
+                        </div>
+                        <h3 style="color: red">
+                            There was an error in payment.
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

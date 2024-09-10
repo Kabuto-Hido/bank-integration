@@ -18,6 +18,12 @@ public class PaymentUtil {
 
     private final AESHelper aesHelper;
 
+    /**
+     * Encrypt object
+     * @param data T
+     * @param message String
+     * @return String
+     */
     public <T> String encryptObject(T data, String message) {
         try {
             ObjectMapper mapper = new Jackson2ObjectMapperBuilder().build();
@@ -29,16 +35,31 @@ public class PaymentUtil {
         }
     }
 
+    /**
+     * Formats the given LocalDateTime into a string with the pattern "yyyyMMddHHmmssSSS".
+     * @param date LocalDateTime
+     * @return String
+     */
     public String getCurrentDateFormatted(LocalDateTime date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
         return date.format(formatter);
     }
 
+    /**
+     * Parses a date string in ISO format and formats it into a string with the pattern "yyyyMMddHHmmssSSS".
+     * @param date String
+     * @return String
+     */
     public String getCurrentDateFormatted(String date) {
         LocalDateTime parsedDate = LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
         return getCurrentDateFormatted(parsedDate);
     }
 
+    /**
+     * Generates a customer ID in the format "CUST" followed by a random 4-digit number.
+     * The number is generated based on the current epoch time.
+     * @return String
+     */
     public String generateCustomerId() {
         long currentTimeMillis = Instant.now().toEpochMilli();
         int randomNumber = (int) (currentTimeMillis % 9000) + 1000;

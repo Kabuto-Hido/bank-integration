@@ -186,6 +186,11 @@ public class PaymentServiceImpl implements PaymentService {
         processDataFeed(transactionId, scbInquiryResponseDTO);
     }
 
+    @Override
+    public Optional<Payment> getPaymentByTransactionId(String transactionId) {
+        return paymentRepository.findByTransactionId(transactionId);
+    }
+
     /**
      * handle datafeed and update to payment
      * @param transactionId String
@@ -257,6 +262,11 @@ public class PaymentServiceImpl implements PaymentService {
         };
     }
 
+    /**
+     * Generate transaction id
+     * @param provider String
+     * @return String
+     */
     public String generateTrx(String provider) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
         String dateStr = dateFormat.format(new Date());

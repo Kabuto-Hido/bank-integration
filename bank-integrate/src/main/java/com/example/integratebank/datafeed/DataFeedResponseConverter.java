@@ -13,7 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Convert datafeed object -> string
+ * This class converts a Map<String, Object> to a JSON string
+ * and converts a JSON string back to a Map<String, Object> for entity attribute mapping.
  */
 @Converter
 class DataFeedResponseConverter implements AttributeConverter<Map<String, Object>, String> {
@@ -21,6 +22,11 @@ class DataFeedResponseConverter implements AttributeConverter<Map<String, Object
     private static final Logger log = LoggerFactory.getLogger(DataFeedResponseConverter.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * Converts a Map<String, Object> to its JSON string.
+     * @param value Map<String, Object>
+     * @return String
+     */
     @Override
     public String convertToDatabaseColumn(Map<String, Object> value) {
         String mappedValue = "";
@@ -34,6 +40,11 @@ class DataFeedResponseConverter implements AttributeConverter<Map<String, Object
         return mappedValue;
     }
 
+    /**
+     * Converts a JSON string from the database into a Map<String, Object>.
+     * @param value JSON String
+     * @return Map<String, Object>
+     */
     @Override
     public Map<String, Object> convertToEntityAttribute(String value) {
         Map<String, Object> mappedValue = Collections.emptyMap();

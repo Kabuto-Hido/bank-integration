@@ -40,6 +40,12 @@ public class SCBClient {
         jsonMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
     }
 
+    /**
+     * call api confirm payment of SCB
+     * @param url String
+     * @param scbBankRequestDTO ScbBankRequestDTO
+     * @return Optional<ScbPurchaseResponseDTO>
+     */
     public Optional<ScbPurchaseResponseDTO> confirmPayment(String url, ScbBankRequestDTO scbBankRequestDTO) {
         return request(url, scbBankRequestDTO)
                 .map(response -> {
@@ -52,6 +58,12 @@ public class SCBClient {
                 });
     }
 
+    /**
+     * Call api get inquiry
+     * @param url String
+     * @param scbInquiryRequestDTO SCBInquiryRequestDTO
+     * @return Optional<SCBInquiryResponseDTO>
+     */
     public Optional<SCBInquiryResponseDTO> getTransactionInquiry(String url, SCBInquiryRequestDTO scbInquiryRequestDTO) {
         return request(url, scbInquiryRequestDTO)
                 .map(response -> {
@@ -65,6 +77,12 @@ public class SCBClient {
     }
 
 
+    /**
+     * Custom request and get response
+     * @param url String
+     * @param dto generic
+     * @return Optional<String>
+     */
     private <T> Optional<String> request(String url, T dto) {
         Request request = buildPostRequest(url, dto);
 
@@ -87,6 +105,12 @@ public class SCBClient {
         }
     }
 
+    /**
+     * Build post request
+     * @param url String
+     * @param dto generic
+     * @return Request
+     */
     private <T> Request buildPostRequest(String url, T dto) {
         try {
             String bodyJson = jsonMapper.writeValueAsString(dto);
