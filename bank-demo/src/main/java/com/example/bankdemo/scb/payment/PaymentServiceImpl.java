@@ -93,9 +93,6 @@ public class PaymentServiceImpl implements PaymentService {
         // callback datafeed to merchant
         callbackDataFeed(paymentRequestDTO, scbMerchant, scbOrder, statusCode, scbStatus);
 
-        // redirect fe url
-        redirectFEUrl(paymentRequestDTO, scbMerchant, scbOrder, statusCode);
-
         //init response
         PaymentResponseDTO.BankStatus bankStatus = PaymentResponseDTO.BankStatus.builder()
                                                                                 .code(1000)
@@ -138,8 +135,16 @@ public class PaymentServiceImpl implements PaymentService {
         client.returnDataFeed(backendReturnUrlValue, returnDataFeedDTO);
     }
 
-    private void redirectFEUrl(PaymentRequestDTO paymentRequestDTO, SCBMerchant scbMerchant, SCBOrder scbOrder,
+    @Override
+    public void redirectFEUrl(PaymentRequestDTO paymentRequestDTO,
                                   String statusCode) {
+        SCBMerchant scbMerchant = scbMerchantService.findByMerchantId(paymentRequestDTO.getMerchantId())
+                                                    .orElseThrow(() -> new AuthException("Invalid merchant id"));
+
+        SCBOrder scbOrder = scbOrderService.findByOrderNoAndMerchantId(paymentRequestDTO.getPaymentInfo().getOrderNumber(),
+                                                                       paymentRequestDTO.getMerchantId())
+                                           .orElseThrow(() -> new AuthException("Invalid order number"));
+
         String frontendReturnUrlValue = paymentRequestDTO.getOtherInfo().stream()
                                                         .filter(info -> "frontendReturnUrl".equals(info.getKey()))
                                                         .map(PaymentRequestDTO.OtherInfo::getValue)

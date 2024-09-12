@@ -8,5 +8,7 @@ import com.example.bankdemo.scb.dto.PaymentResponseDTO;
 public interface PaymentService {
     PaymentResponseDTO doPayment(PaymentRequestDTO paymentRequestDTO, String apiKey, String secretKey);
 
-   PaymentInquiryResponseDTO getInquiry(PaymentInquiryRequestDTO paymentInquiryRequestDTO, String apiKey, String secretKey);
+    PaymentInquiryResponseDTO getInquiry(PaymentInquiryRequestDTO paymentInquiryRequestDTO, String apiKey, String secretKey);
+
+    void redirectFEUrl(PaymentRequestDTO paymentRequestDTO, String statusCode);
 }

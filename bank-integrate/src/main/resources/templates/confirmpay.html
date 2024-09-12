@@ -105,22 +105,21 @@
 </head>
 <body>
 <div class="center-container">
-    <form id="payFormCCard" action="" method="POST" name="payFormCCard"
-          th:action="@{/confirm-pay}" th:object="${cardInfo}">
+    <form id="payFormCCard" action="http://localhost:9001/confirm-pay" method="POST" name="payFormCCard">
         <input type="hidden" name="transactionId" th:value="${data['orderNumber']}"/>
         <input type="hidden" name="provider" th:value="${bankProvider}"/>
         <div class="carousel-item active">
             <div class="form-group">
                 <p>Card Number</p>
-                <input id="cardNo_show" type="text"
-                       placeholder="Card number" class="form-control" th:field="*{cardNo}"/>
+                <input id="cardNo_show" type="text" name="cardNo"
+                       placeholder="Card number" class="form-control"/>
             </div>
             <div class="form-group row">
                 <div>
                     <p>Expiry date</p>
                     <div>
                         <select name="epMonth" id="epMonth_show"
-                                onchange="checkCardExpireMonth()" th:field="*{epMonth}">
+                                onchange="checkCardExpireMonth()">
                             <option value="0">MM</option>
                             <option value="01">01</option>
                             <option value="02">02</option>
@@ -137,8 +136,7 @@
                         </select>
                         <span id="star_mm"
                               style="color:red; margin-left: 3px; display: none">*</span>
-                        <select style="margin-left: 10px" name="epYear" id="epYear" onchange="checkCardExpireYear()"
-                                th:field="*{epYear}">
+                        <select style="margin-left: 10px" name="epYear" id="epYear_show" onchange="checkCardExpireYear()">
                             <option value="0">YY</option>
                             <option value="24">24</option>
                             <option value="25">25</option>
@@ -155,7 +153,7 @@
                         <input type="text" class="custom-form form-control" id="securityCode"
                                name="securityCode" onkeyup="checkCardCVV()" maxlength="4"
                                autocomplete="off"
-                               placeholder="456" th:field="*{securityCode}"/>
+                               placeholder="456"/>
                         <span id="star_cvv"
                               style="color:red; margin-left: 3px; display: none">*</span>
                     </div>
@@ -179,13 +177,13 @@
     }
 
     function updateCardExpireYearErrorVisible(showError) {
-        updateVisible($('#star_yyyy'), showError);
+        updateVisible(document.getElementById('star_yyyy'), showError);
     }
     function updateCardExpireMonthErrorVisible(showError) {
-        updateVisible($('#star_mm'), showError);
+        updateVisible(document.getElementById('star_mm'), showError);
     }
     function updateCardCVVErrorVisible(showError) {
-        updateVisible($('#star_cvv'), showError);
+        updateVisible(document.getElementById('star_cvv'), showError);
     }
 
     function updateVisible(selector, show) {
@@ -200,17 +198,17 @@
     }
     function validateCardExpireYear() {
         // valid if didn't exist
-        let selector = $('#epYear');
+        let selector = document.getElementById('epYear');
         return !selector.length || selector.val() !== '0';
     }
     function validateCardExpireMonth() {
         // valid if didn't exist
-        let selector = $('#epMonth_show');
+        let selector = document.getElementById('epMonth_show');
         return !selector.length || selector.val() !== '0';
     }
     function validateCardCVV() {
         // valid if didn't exist
-        let selector = $('#securityCode');
+        let selector = document.getElementById('securityCode');
         return !selector.length || selector.val() !== '';
     }
 </script>
