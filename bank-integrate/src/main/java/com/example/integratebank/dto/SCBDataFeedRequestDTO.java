@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ToString
 public class SCBDataFeedRequestDTO {
     private DataResponse data;
 
@@ -20,6 +22,7 @@ public class SCBDataFeedRequestDTO {
     @NoArgsConstructor
     @Builder
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class DataResponse {
         private String merchantId;
         private AuthorizeResponse authorizeResponse;
@@ -30,6 +33,7 @@ public class SCBDataFeedRequestDTO {
     @NoArgsConstructor
     @Builder
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class AuthorizeResponse {
         private String txnNumber;
         private String statusCode;

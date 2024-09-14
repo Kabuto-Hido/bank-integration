@@ -1,5 +1,6 @@
 package com.example.integratebank.bank.module;
 
+import com.example.integratebank.dto.PaymentDTO;
 import com.example.integratebank.enumeration.PaymentProvider;
 import com.example.integratebank.payment.Payment;
 
@@ -17,5 +18,5 @@ public interface PaymentModule {
      * @param payment Payment
      * @return Map<String, String>
      */
-    Map<String, String> getOrderProps(Payment payment);
+    Map<String, String> getOrderProps(Payment payment, PaymentDTO paymentDTO);
 }

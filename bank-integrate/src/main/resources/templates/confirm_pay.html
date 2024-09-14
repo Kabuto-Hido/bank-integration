@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #EAF6F6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            background-color: #FFFFFF;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        .details {
+            margin-bottom: 20px;
+        }
+
+        .heading {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        #amount_months {
+            margin-top: 5px;
+            display: flex;
+            justify-content: center; /* Centering content */
+        }
+
+        .month-type {
+            font-size: 18px;
+            color: #007bff;
+            font-weight: 500;
+            text-align: center;
+            background-color: #F8F9FA;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .decimal-format {
+            font-weight: 500;
+            font-size: 20px;
+        }
+
+        .currency-format {
+            margin-left: 5px;
+            font-size: 20px;
+            color: #28a745;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .agree-checkbox {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .custom-checkbox input {
+            margin-right: 10px;
+        }
+
+        .checkbox-text {
+            display: flex;
+            align-items: center;
+        }
+
+        #pay_btn {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 16px;
+            font-size: 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 100%;
+            text-align: center;
+        }
+
+        #pay_btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .decimal-format {
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="details">
+            <strong class="heading" style="margin-bottom: 10px">Payment Info </strong>
+            <div id="amount_months"
+                 style="margin-top: 5px">
+                <div class="month-type plan-pay">
+                    <span class="decimal-format" th:text="${data['total']}">3200</span>
+                    <span class="currency-format" th:text="${data['cc']}">THB</span>
+                </div>
+            </div>
+        </div>
+        <form id="payFormCCard" name="payFormCCard" method="POST" action="http://localhost:9002/kbank/payment">
+            <input type="hidden" name="refNo" th:value="${data['refNo']}"/>
+            <input type="hidden" name="merchantId" th:value="${data['merchantId']}"/>
+            <input type="hidden" name="customerEmail" th:value="${data['customerEmail']}"/>
+<!--            <input type="hidden" name="cc" th:value="${data['cc']}"/>-->
+            <input type="hidden" name="total" th:value="${data['total']}"/>
+            <input type="hidden" name="channel" th:value="${data['channel']}"/>
+            <input type="hidden" name="returnUrl" th:value="${data['returnUrl']}"/>
+            <div class="form-group">
+                <label for="cc">Select Currency</label>
+                <select id="cc" name="cc" class="form-control" required>
+                    <option value="THB" th:selected="${data['cc'] == 'THB'}">THB - Thai Baht</option>
+                    <option value="USD" th:selected="${data['cc'] == 'USD'}">USD - US Dollar</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <div class="agree-checkbox">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" class="" id="chk_agree"
+                               style="" onclick="checkAgree()"/>
+                        <span class="checkbox-text" for="chk_agree" th:text="${agreementMsg}">
+                            ${agreementMsg}&nbsp;<span id="star_agree" style="color:red; margin-left: 3px">*</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <button id="pay_btn" class="btn btn-lg btn-primary w-100 position-relative"
+                    type="submit">Submit
+            </button>
+        </form>
+    </div>
+</body>
+<script>
+    function checkAgree() {
+        updateAgreeErrorVisible(!validateAgree());
+    }
+    function updateAgreeErrorVisible(showError) {
+        updateVisible(document.getElementById('star_agree'), showError);
+    }
+    function validateAgree() {
+        // valid if didn't exist
+        let selector = document.getElementById('chk_agree');
+        return !selector.length || selector.prop('checked') === true;
+    }
+</script>
+</html>

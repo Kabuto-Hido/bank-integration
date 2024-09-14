@@ -4,19 +4,36 @@ import com.example.integratebank.exception.BadRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
 public class PaymentUtil {
 
     private final AESHelper aesHelper;
+
+    public static final MathContext MC = new MathContext(16, RoundingMode.HALF_UP);
+
+    public static final int SCALE = 2;
+
+    private static final ThreadLocal<DecimalFormatSymbols> DECIMAL_FORMAT_SYMBOLS =
+            ThreadLocal.withInitial(() -> DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+
+    private static final ThreadLocal<DecimalFormat> DECIMAL_FORMATTER =
+            ThreadLocal.withInitial(() -> new DecimalFormat("0.00", DECIMAL_FORMAT_SYMBOLS.get()));
 
     /**
      * Encrypt object
@@ -64,5 +81,17 @@ public class PaymentUtil {
         long currentTimeMillis = Instant.now().toEpochMilli();
         int randomNumber = (int) (currentTimeMillis % 9000) + 1000;
         return "CUST" + randomNumber;
+    }
+
+    public static String formatDecimal(@Nonnull BigDecimal d) {
+        return DECIMAL_FORMATTER.get().format(setMSScale(d));
+    }
+
+    public static BigDecimal setMSScale(int scale, BigDecimal d) {
+        return d.setScale(scale, MC.getRoundingMode());
+    }
+
+    public static BigDecimal setMSScale(BigDecimal d) {
+        return setMSScale(SCALE, d);
     }
 }

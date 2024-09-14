@@ -7,6 +7,7 @@ import com.example.bankdemo.scb.dto.PaymentResponseDTO;
 import com.example.bankdemo.scb.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -19,6 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class SCBController {
 
     private final PaymentService paymentService;
+
+    @GetMapping
+    public ResponseEntity<Object> hello(){
+        return ResponseEntity.ok("Hello World");
+    }
 
     @PostMapping("/payment")
     public ResponseEntity<PaymentResponseDTO> doPayment(@RequestHeader("merchantSecretKey") String merchantSecretKey,

@@ -158,7 +158,8 @@
                        pattern="[0-9.,]+"
                        autocomplete="off" class="form-control"
                        required
-                       th:field="*{amount}"/>
+                       th:field="*{amount}"
+                       oninput="validateAmountInput(this)"/>
             </div>
             <div class="form-group">
                 <label for="firstname">
@@ -185,7 +186,7 @@
             </div>
             <div class="radio-container">
                 <label th:each="p : ${providers}">
-                    <input type="radio" name="provider" th:field="*{provider}" th:value="${p}">
+                    <input type="radio" name="provider" th:field="*{provider}" th:value="${p}" required>
                     <span th:text="${p}"></span>
                 </label>
             </div>
@@ -201,9 +202,12 @@
             }
             const messageField = document.getElementById('message');
             if (messageField.value === '') {
-                messageField.value = null; // Set to 'null' or any specific value you prefer
+                messageField.value = null;
             }
 
+        }
+        function validateAmountInput(input) {
+            input.value = input.value.replace(/[^0-9.,]/g, '');
         }
     </script>
 </body>

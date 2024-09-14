@@ -1,6 +1,8 @@
 package com.example.integratebank.controllers;
 
+import com.example.integratebank.bank.client.KBANKClient;
 import com.example.integratebank.dto.CardInfoRequestDTO;
+import com.example.integratebank.dto.KBANKInquiryResponseDTO;
 import com.example.integratebank.dto.PaymentDTO;
 import com.example.integratebank.dto.SCBConfirmDTO;
 import com.example.integratebank.enumeration.PaymentProvider;
@@ -8,10 +10,8 @@ import com.example.integratebank.payment.Payment;
 import com.example.integratebank.payment.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +36,8 @@ public class PaymentUIController {
 
     private final PaymentService paymentService;
 
+    private final KBANKClient kbankClient;
+
     @GetMapping("/pay")
     public String pay(Model model) {
         List<String> providers = Arrays.asList(PaymentProvider.SCB.name(), PaymentProvider.KBANK.name());
@@ -53,11 +55,24 @@ public class PaymentUIController {
         model.addAttribute("data", data);
         model.addAttribute("bankProvider", paymentDto.getProvider());
         if (paymentDto.getProvider().equals(PaymentProvider.KBANK)) {
-            model.addAttribute("s", PaymentProvider.KBANK.name());
+            model.addAttribute("agreementMsg", "Payment Terms and Conditions");
+            return "confirm_pay";
         }
-        return "confirmpay";
+        return "card_pay";
     }
 
+    /**
+     * Case use card to payment with bank (SCB)
+     * @param provider PaymentProvider
+     * @param transactionId String
+     * @param cardNo String
+     * @param securityCode String
+     * @param epMonth String
+     * @param epYear String
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @throws IOException
+     */
     @PostMapping("/confirm-pay")
     public void confirmPay(@RequestParam PaymentProvider provider,
                            @RequestParam String transactionId,
@@ -84,7 +99,7 @@ public class PaymentUIController {
     }
 
     /**
-     * Handle data bank return to UI
+     * Handle data from SCB bank return to UI
      * @param model Model
      * @param orderNumber String
      * @param statusCode String
@@ -110,9 +125,47 @@ public class PaymentUIController {
         }
 
         return "fail";
-//        return "redirect:/fail?order_no=" + orderNumber;
     }
 
+    /**
+     * Handle data from KBANK bank return to UI
+     * @param model Model
+     * @param refNo String
+     * @return UI
+     */
+    @GetMapping("/merchant/kbank")
+    public String redirectKBANK(Model model,
+                              @RequestParam(value = "refNo", required = false) String transactionId) {
+        // Check transaction id and status code is not null
+        if (StringUtils.isEmpty(transactionId)) {
+            return "error";
+        }
+
+        // Check is payment exist
+        Optional<Payment> paymentOptional = paymentService.getPaymentByTransactionId(transactionId);
+        if (paymentOptional.isEmpty()) {
+            return "error";
+        }
+
+        // get inquiry
+        Optional<KBANKInquiryResponseDTO> optionalKBANKInquiryResponseDTO = kbankClient.getPaymentStatus(transactionId);
+        if (optionalKBANKInquiryResponseDTO.isEmpty()) {
+            return "redirect:/fail?ref=" + transactionId;
+        }
+
+        if (KBANKInquiryResponseDTO.KBANKStatus.SUCCESS.equals(optionalKBANKInquiryResponseDTO.get().getStatus())) {
+            return "redirect:/paysuccess?ref=" + transactionId;
+        }
+
+        return "redirect:/fail?ref=" + transactionId;
+    }
+
+    /**
+     * handle success page
+     * @param model Model
+     * @param ref String
+     * @return UI page success
+     */
     @GetMapping("/paysuccess")
     public String successPage(Model model,
                               @RequestParam(value = "ref", required = false) String ref) {
@@ -144,6 +197,12 @@ public class PaymentUIController {
         return "index";
     }
 
+    /**
+     * Handle page fail
+     * @param model Model
+     * @param ref String
+     * @return UI Page fail
+     */
     @GetMapping("/fail")
     public String failPage(Model model,
                               @RequestParam(value = "ref", required = false) String ref) {

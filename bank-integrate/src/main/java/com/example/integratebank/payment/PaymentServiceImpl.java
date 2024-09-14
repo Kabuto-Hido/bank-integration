@@ -1,5 +1,6 @@
 package com.example.integratebank.payment;
 
+import com.example.integratebank.bank.client.KBANKClient;
 import com.example.integratebank.bank.client.SCBClient;
 import com.example.integratebank.bank.module.PaymentModule;
 import com.example.integratebank.constants.MessageConstants;
@@ -8,6 +9,7 @@ import com.example.integratebank.customer.CustomerRepository;
 import com.example.integratebank.datafeed.DatafeedService;
 import com.example.integratebank.dto.CardInfoRequestDTO;
 import com.example.integratebank.dto.DatafeedDTO;
+import com.example.integratebank.dto.KBANKInquiryResponseDTO;
 import com.example.integratebank.dto.PaymentDTO;
 import com.example.integratebank.dto.SCBConfirmDTO;
 import com.example.integratebank.dto.SCBInquiryRequestDTO;
@@ -56,6 +58,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final SCBClient scbClient;
 
+    private final KBANKClient kbankClient;
+
     @Value("${tx.prefix}")
     private String txPrefix;
 
@@ -70,6 +74,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Value("${scb.payment.url}")
     private String scbActionUrl;
+
+    @Value("${scb.inquiry.url}")
+    private String scbInquiryUrl;
 
     /**
      * create payment transaction
@@ -89,15 +96,37 @@ public class PaymentServiceImpl implements PaymentService {
             customerRepository.save(new Customer(payment, dto.getMessage(), dto.getEmail(), dto.getLastname(),
                                                  dto.getFirstname()));
 
-            return paymentModules.get(dto.getProvider()).getOrderProps(payment);
+            return paymentModules.get(dto.getProvider()).getOrderProps(payment, dto);
         } catch (DataIntegrityViolationException ex) {
             throw new DuplicateException(ex.getMessage());
         }
-
     }
 
     /**
-     * In case insert card in your page
+     * Generate transaction id
+     * @param provider String
+     * @return String
+     */
+    public String generateTrx(String provider) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
+        String dateStr = dateFormat.format(new Date());
+        return txPrefix + provider + dateStr;
+    }
+
+    /**
+     * Find payment by transaction id
+     * @param transactionId String
+     * @return Optional<Payment>
+     */
+    @Override
+    public Optional<Payment> getPaymentByTransactionId(String transactionId) {
+        return paymentRepository.findByTransactionId(transactionId);
+    }
+
+    // SCB
+
+    /**
+     * In case insert card in your page <SCB>
      * submit payment with card information
      * @param dto CardInfoRequestDTO
      * @return SCBConfirmDTO
@@ -166,7 +195,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (Objects.nonNull(authorizeResponse)) {
             if (authorizeResponse.getStatusCode().equals("1001")) {
                 // get inquiry by call api from bank
-                getInquiry(transactionId);
+                getSCBInquiry(transactionId);
                 return new SCBConfirmDTO(true, PaymentStatus.COMPLETE.name());
             }
         }
@@ -174,25 +203,23 @@ public class PaymentServiceImpl implements PaymentService {
         return new SCBConfirmDTO(false, PaymentStatus.PENDING.name());
     }
 
+    /**
+     * Get payment inquiry from SCB bank
+     * @param transactionId String
+     */
     @Override
-    public void getInquiry(String transactionId) {
+    public void getSCBInquiry(String transactionId) {
         // prepare inquiry request dto
         SCBInquiryRequestDTO scbInquiryRequestDTO = new SCBInquiryRequestDTO(scbMerchantId, transactionId);
 
-        SCBInquiryResponseDTO scbInquiryResponseDTO = scbClient.getTransactionInquiry("http://localhost:9002/scb/inquiry",
-                                                                          scbInquiryRequestDTO)
+        SCBInquiryResponseDTO scbInquiryResponseDTO = scbClient.getTransactionInquiry(scbInquiryUrl, scbInquiryRequestDTO)
                                                                .orElseThrow(() -> new BadRequest("Inquiry not found"));
 
         processDataFeed(transactionId, scbInquiryResponseDTO);
     }
 
-    @Override
-    public Optional<Payment> getPaymentByTransactionId(String transactionId) {
-        return paymentRepository.findByTransactionId(transactionId);
-    }
-
     /**
-     * handle datafeed and update to payment
+     * handle scb datafeed and update to payment
      * @param transactionId String
      * @param scbInquiryResponseDTO SCBInquiryResponseDTO
      */
@@ -249,7 +276,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     /**
-     * mapping status code of bank to payment status
+     * mapping SCB status code of bank to payment status
      * @param statusCode String
      * @return PaymentStatus
      */
@@ -262,14 +289,53 @@ public class PaymentServiceImpl implements PaymentService {
         };
     }
 
+    // KBANK
+
     /**
-     * Generate transaction id
-     * @param provider String
-     * @return String
+     * Get payment inquiry from KBANK bank
+     * @param transactionId String
      */
-    public String generateTrx(String provider) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
-        String dateStr = dateFormat.format(new Date());
-        return txPrefix + provider + dateStr;
+    @Override
+    public void getKBANKInquiry(String transactionId) {
+        KBANKInquiryResponseDTO kbankInquiryResponseDTO = kbankClient.getPaymentStatus(transactionId)
+                                                                     .orElseThrow(() -> new BadRequest("Inquiry not found"));
+
+        processKBANKDataFeed(transactionId, kbankInquiryResponseDTO);
+    }
+
+    private void processKBANKDataFeed(String transactionId, KBANKInquiryResponseDTO kbankInquiryResponseDTO) {
+        PaymentStatus bankStatus = getKBANKPaymentStatus(kbankInquiryResponseDTO.getStatus());
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> responseMap = objectMapper.convertValue(kbankInquiryResponseDTO, new TypeReference<>() {
+        });
+
+        //init datafeed
+        DatafeedDTO datafeedDTO = DatafeedDTO.builder()
+                                             .paymentStatus(bankStatus)
+                                             .transactionId(transactionId)
+                                             .amount(kbankInquiryResponseDTO.getBaseAmount())
+                                             .response(responseMap)
+                                             .build();
+
+        // add datafeed in db
+        datafeedService.addDataFeed(datafeedDTO);
+
+        // update status into payment
+        updateStatus(datafeedDTO, kbankInquiryResponseDTO.getPayRef());
+    }
+
+    /**
+     * mapping KBANK status code of bank to payment status
+     * @param status KBANKStatus
+     * @return PaymentStatus
+     */
+    private PaymentStatus getKBANKPaymentStatus(KBANKInquiryResponseDTO.KBANKStatus status) {
+        return switch (status) {
+            case FAIL -> PaymentStatus.FAIL;
+            case VOID -> PaymentStatus.VOID;
+            case SUCCESS -> PaymentStatus.COMPLETE;
+            case CANCEL -> PaymentStatus.CANCEL;
+            default -> PaymentStatus.PENDING;
+        };
     }
 }

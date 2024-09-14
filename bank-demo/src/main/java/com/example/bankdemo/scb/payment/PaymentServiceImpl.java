@@ -69,7 +69,6 @@ public class PaymentServiceImpl implements PaymentService {
                                                                    });
 
         SCBStatus scbStatus = SCBStatus.PENDING;
-
         if (cardInfo.containsKey("cardNumber")) {
             String cardNumber = cardInfo.get("cardNumber");
             if (cardNumber.startsWith("356")) {

@@ -12,7 +12,9 @@ public interface PaymentService {
 
     SCBConfirmDTO submitPayment(CardInfoRequestDTO dto);
 
-    void getInquiry(String transactionId);
+    void getSCBInquiry(String transactionId);
 
     Optional<Payment> getPaymentByTransactionId(String transactionId);
+
+    void getKBANKInquiry(String transactionId);
 }

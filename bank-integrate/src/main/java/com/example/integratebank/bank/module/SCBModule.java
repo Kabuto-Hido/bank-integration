@@ -1,5 +1,6 @@
 package com.example.integratebank.bank.module;
 
+import com.example.integratebank.dto.PaymentDTO;
 import com.example.integratebank.enumeration.PaymentProvider;
 import com.example.integratebank.payment.Payment;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ public class SCBModule extends DefaultModule {
     }
 
     @Override
-    public Map<String, String> getOrderProps(Payment payment) {
+    public Map<String, String> getOrderProps(Payment payment, PaymentDTO paymentDTO) {
         Map<String, String> props = new HashMap<>();
         props.put("orderNumber", payment.getTransactionId());
         props.put("actionUrl", actionUrl);
