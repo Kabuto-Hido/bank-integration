@@ -1,7 +1,5 @@
 package com.example.bankdemo.kbank.order;
 
-import com.example.bankdemo.scb.order.SCBOrder;
-
 import java.util.Optional;
 
 public interface KBANKOrderService {

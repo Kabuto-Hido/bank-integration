@@ -89,10 +89,10 @@ public class KBANKClient {
             if (code == 200) {
                 return Optional.ofNullable(bodyString);
             }
-            log.error("BBL response code: {}, body: {}", code, bodyString);
+            log.error("KBANK response code: {}, body: {}", code, bodyString);
             return Optional.empty();
         } catch (IOException e) {
-            log.error("Can't get response from BBL", e);
+            log.error("Can't get response from KBANK", e);
             return Optional.empty();
         }
     }

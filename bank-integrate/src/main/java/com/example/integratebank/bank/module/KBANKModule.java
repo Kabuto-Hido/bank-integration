@@ -38,7 +38,7 @@ public class KBANKModule extends DefaultModule {
         props.put("total", PaymentUtil.formatDecimal(payment.getAmount()));
         // full -> Full Payment VISA Mastercard
         props.put("channel", "full");
-        props.put("returnUrl", returnUrl);
+        props.put("returnUrl", returnUrl + "?refNo=" + payment.getTransactionId());
         props.put("actionUrl", actionUrl);
         return props;
     }

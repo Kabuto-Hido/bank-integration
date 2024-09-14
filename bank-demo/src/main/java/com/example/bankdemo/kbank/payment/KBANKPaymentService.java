@@ -6,5 +6,7 @@ import com.example.bankdemo.kbank.dto.KBANKPaymentDTO;
 public interface KBANKPaymentService {
     String doPay(KBANKPaymentDTO paymentDTO);
 
+    String cancelPay(KBANKPaymentDTO paymentDTO);
+
     KBANKInquiryDTO getInquiry(String merchantId, String loginId, String password, String refNo);
 }

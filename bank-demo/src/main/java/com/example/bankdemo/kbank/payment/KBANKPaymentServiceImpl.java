@@ -80,7 +80,33 @@ public class KBANKPaymentServiceImpl implements KBANKPaymentService {
             throw new NotFoundException("Return url is empty");
         }
 
-        return returnUrl + "?refNo=" + paymentDTO.getRefNo();
+        return returnUrl;
+    }
+
+    @Override
+    public String cancelPay(KBANKPaymentDTO paymentDTO) {
+        Optional<KBANKMerchant> kbankMerchantOptional = kbankMerchantService.getByMerchantId(paymentDTO.getMerchantId());
+        if (kbankMerchantOptional.isEmpty()) {
+            throw new AuthException("Invalid merchant id");
+        }
+
+        kbankOrderService.save(new KBANKOrder(
+                paymentDTO.getRefNo(),
+                generatePrefixTrx(),
+                paymentDTO.getAmount(),
+                null,
+                paymentDTO.getCurrency(),
+                paymentDTO.getCustomerEmail(),
+                KBANKStatus.CANCEL,
+                kbankMerchantOptional.get()
+        ));
+
+        String returnUrl = paymentDTO.getReturnUrl();
+        if (StringUtils.isEmpty(returnUrl)) {
+            throw new NotFoundException("Return url is empty");
+        }
+
+        return returnUrl;
     }
 
     @Override

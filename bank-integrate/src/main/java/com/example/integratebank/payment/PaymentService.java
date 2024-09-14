@@ -1,6 +1,7 @@
 package com.example.integratebank.payment;
 
 import com.example.integratebank.dto.CardInfoRequestDTO;
+import com.example.integratebank.dto.DatafeedDTO;
 import com.example.integratebank.dto.PaymentDTO;
 import com.example.integratebank.dto.SCBConfirmDTO;
 
@@ -17,4 +18,6 @@ public interface PaymentService {
     Optional<Payment> getPaymentByTransactionId(String transactionId);
 
     void getKBANKInquiry(String transactionId);
+
+    void updateStatus(DatafeedDTO datafeedDTO, String txnNumber);
 }

@@ -31,7 +31,7 @@ public class KBANKDataFeedController {
             return ResponseEntity.badRequest().body("Invalid request");
         }
 
-        paymentService.getSCBInquiry(refNo);
+        paymentService.getKBANKInquiry(refNo);
         return ResponseEntity.ok("OK");
     }
 }

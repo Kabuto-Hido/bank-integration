@@ -117,21 +117,21 @@
     <h2 class="text-center">Payment Details</h2>
     <span class="merchant-info">Merchant Ref. No: </span><strong th:text="${refNo}">123812</strong>
     <div class="amount-group">
-        <span class="amount-class" th:text="${amount}">3100</span>
-        <span class="currency-class" th:text="${currency}">THB</span>
+        <span class="amount-class" th:text="${kbankPaymentDTO.amount}">3100</span>
+        <span class="currency-class" th:text="${kbankPaymentDTO.currency}">THB</span>
     </div>
-    <div th:if="${customerEmail != null and customerEmail.trim() != ''}">
+    <div th:if="${kbankPaymentDTO.customerEmail != null and kbankPaymentDTO.customerEmail.trim() != ''}">
         <label>Customer email</label>
-        <span class="email" th:text="${customerEmail}">email</span>
+        <span class="email" th:text="${kbankPaymentDTO.customerEmail}">email</span>
     </div>
-    <form id="cardForm" method="POST" th:action="@{/submit-card-info}" th:object="${kbankPaymentDTO}">
-        <input type="hidden" th:value="${refNo}" th:field="*{refNo}"/>
-        <input type="hidden" th:value="${merchantId}" th:field="*{merchantId}"/>
-        <input type="hidden" th:value="${amount}" th:field="*{amount}"/>
-        <input type="hidden" th:value="${currency}" th:field="*{currency}"/>
-        <input type="hidden" th:value="${customerEmail}" th:field="*{refNo}"/>
-        <input type="hidden" th:value="${channel}" th:field="*{channel}"/>
-        <input type="hidden" th:value="${returnUrl}" th:field="*{returnUrl}"/>
+    <form id="cardForm" method="POST" action="http://localhost:9002/kbank/submit-card-info" th:object="${kbankPaymentDTO}">
+        <input type="hidden" th:field="*{refNo}"/>
+        <input type="hidden" th:field="*{merchantId}"/>
+        <input type="hidden" th:field="*{amount}"/>
+        <input type="hidden" th:field="*{currency}"/>
+        <input type="hidden" th:field="*{customerEmail}"/>
+        <input type="hidden" th:field="*{channel}"/>
+        <input type="hidden" th:field="*{returnUrl}"/>
         <!-- Cardholder Name -->
         <div class="form-group">
             <label for="cardName">Cardholder Name</label>
@@ -196,6 +196,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        <button id="cancel_btn" type="button" class="btn btn-secondary btn-block">Cancel</button>
     </form>
 </div>
 
@@ -218,6 +219,14 @@
             input.value = input.value.slice(0, 3);
         }
     }
+
+    document.getElementById('cancel_btn').addEventListener('click', function () {
+        const form = document.getElementById('cardForm');
+        form.action = "http://localhost:9002/kbank/cancel-pay"
+
+        form.submit();
+    });
+
 </script>
 </body>
 </html>

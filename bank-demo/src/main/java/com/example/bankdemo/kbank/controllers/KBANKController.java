@@ -31,14 +31,14 @@ public class KBANKController {
                                     @RequestParam String channel,
                                     @RequestParam String returnUrl) {
         KBANKPaymentDTO kbankPaymentDTO = new KBANKPaymentDTO();
+        kbankPaymentDTO.setRefNo(refNo);
+        kbankPaymentDTO.setMerchantId(merchantId);
+        kbankPaymentDTO.setAmount(amount);
+        kbankPaymentDTO.setCurrency(currency);
+        kbankPaymentDTO.setCustomerEmail(customerEmail);
+        kbankPaymentDTO.setChannel(channel);
+        kbankPaymentDTO.setReturnUrl(returnUrl);
         model.addAttribute("kbankPaymentDTO", kbankPaymentDTO);
-        model.addAttribute("refNo", refNo);
-        model.addAttribute("merchantId", merchantId);
-        model.addAttribute("amount", amount);
-        model.addAttribute("currency", currency);
-        model.addAttribute("customerEmail", customerEmail);
-        model.addAttribute("channel", channel);
-        model.addAttribute("returnUrl", returnUrl);
         return "kbank-pay";
     }
 
@@ -55,5 +55,11 @@ public class KBANKController {
                                                           @RequestParam String password,
                                                           @RequestParam String refNo){
         return ResponseEntity.ok(paymentService.getInquiry(merchantId, loginId, password, refNo));
+    }
+
+    @PostMapping("/cancel-pay")
+    public String cancelPayment(@ModelAttribute("kbankPaymentDTO") KBANKPaymentDTO paymentDto) {
+        String redirectUrl = paymentService.cancelPay(paymentDto);
+        return "redirect:" + redirectUrl;
     }
 }

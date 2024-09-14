@@ -255,7 +255,8 @@ public class PaymentServiceImpl implements PaymentService {
      * @param datafeedDTO DatafeedDTO
      * @param txnNumber String
      */
-    private void updateStatus(DatafeedDTO datafeedDTO, String txnNumber) {
+    @Override
+    public void updateStatus(DatafeedDTO datafeedDTO, String txnNumber) {
         paymentRepository.findByTransactionId(datafeedDTO.getTransactionId())
                          .ifPresent(payment -> {
                              if (payment.getStatus() != PaymentStatus.PENDING) {
@@ -303,6 +304,11 @@ public class PaymentServiceImpl implements PaymentService {
         processKBANKDataFeed(transactionId, kbankInquiryResponseDTO);
     }
 
+    /**
+     * process KBANK datafeed
+     * @param transactionId String
+     * @param kbankInquiryResponseDTO KBANKInquiryResponseDTO
+     */
     private void processKBANKDataFeed(String transactionId, KBANKInquiryResponseDTO kbankInquiryResponseDTO) {
         PaymentStatus bankStatus = getKBANKPaymentStatus(kbankInquiryResponseDTO.getStatus());
         ObjectMapper objectMapper = new ObjectMapper();
@@ -313,7 +319,7 @@ public class PaymentServiceImpl implements PaymentService {
         DatafeedDTO datafeedDTO = DatafeedDTO.builder()
                                              .paymentStatus(bankStatus)
                                              .transactionId(transactionId)
-                                             .amount(kbankInquiryResponseDTO.getBaseAmount())
+                                             .amount(kbankInquiryResponseDTO.getTotalAmount())
                                              .response(responseMap)
                                              .build();
 

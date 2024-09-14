@@ -52,7 +52,7 @@ public class SCBClient {
                     try {
                         return jsonMapper.readValue(response, ScbPurchaseResponseDTO.class);
                     } catch (JsonProcessingException e) {
-                        log.error("Can't get payment status from Pay Solutions", e);
+                        log.error("Can't get payment status from SCB", e);
                         throw new RuntimeException(e);
                     }
                 });

@@ -2,10 +2,12 @@ package com.example.integratebank.controllers;
 
 import com.example.integratebank.bank.client.KBANKClient;
 import com.example.integratebank.dto.CardInfoRequestDTO;
+import com.example.integratebank.dto.DatafeedDTO;
 import com.example.integratebank.dto.KBANKInquiryResponseDTO;
 import com.example.integratebank.dto.PaymentDTO;
 import com.example.integratebank.dto.SCBConfirmDTO;
 import com.example.integratebank.enumeration.PaymentProvider;
+import com.example.integratebank.enumeration.PaymentStatus;
 import com.example.integratebank.payment.Payment;
 import com.example.integratebank.payment.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -130,7 +132,7 @@ public class PaymentUIController {
     /**
      * Handle data from KBANK bank return to UI
      * @param model Model
-     * @param refNo String
+     * @param transactionId String
      * @return UI
      */
     @GetMapping("/merchant/kbank")
@@ -153,6 +155,11 @@ public class PaymentUIController {
             return "redirect:/fail?ref=" + transactionId;
         }
 
+        if (KBANKInquiryResponseDTO.KBANKStatus.CANCEL.equals(optionalKBANKInquiryResponseDTO.get().getStatus())) {
+            return "redirect:/cancel?ref=" + transactionId;
+        }
+
+        // case success
         if (KBANKInquiryResponseDTO.KBANKStatus.SUCCESS.equals(optionalKBANKInquiryResponseDTO.get().getStatus())) {
             return "redirect:/paysuccess?ref=" + transactionId;
         }
@@ -194,7 +201,7 @@ public class PaymentUIController {
             amount = payment.getAmount();
         }
         model.addAttribute("amount", amount);
-        return "index";
+        return "success";
     }
 
     /**
@@ -207,5 +214,30 @@ public class PaymentUIController {
     public String failPage(Model model,
                               @RequestParam(value = "ref", required = false) String ref) {
         return "fail";
+    }
+
+    /**
+     * Handle page fail
+     * @param model Model
+     * @param ref String
+     * @return UI Page fail
+     */
+    @GetMapping("/cancel")
+    public String cancelPage(Model model,
+                           @RequestParam(value = "ref", required = false) String ref) {
+        // Check transaction id and status code is not null
+        if (StringUtils.isEmpty(ref)) {
+            return "error";
+        }
+
+        // Check is payment exist
+        Optional<Payment> paymentOptional = paymentService.getPaymentByTransactionId(ref);
+        if (paymentOptional.isEmpty()) {
+            return "error";
+        }
+        DatafeedDTO datafeedDTO = DatafeedDTO.builder().transactionId(ref)
+                                             .paymentStatus(PaymentStatus.CANCEL).build();
+        paymentService.updateStatus(datafeedDTO, null);
+        return "cancel";
     }
 }
