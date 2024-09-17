@@ -34,7 +34,6 @@ public class KBANKModule extends DefaultModule {
         props.put("merchantId", merchantId);
         props.put("customerEmail", StringUtils.isEmpty(paymentDTO.getEmail()) ? null : paymentDTO.getEmail());
         // currency THB or USD
-//        props.put("cc", "THB");
         props.put("total", PaymentUtil.formatDecimal(payment.getAmount()));
         // full -> Full Payment VISA Mastercard
         props.put("channel", "full");

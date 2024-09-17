@@ -136,11 +136,10 @@
                 </div>
             </div>
         </div>
-        <form id="payFormCCard" name="payFormCCard" method="POST" action="http://localhost:9002/kbank/payment">
+        <form id="payFormCCard" name="payFormCCard" method="POST" th:action="${data['actionUrl']}">
             <input type="hidden" name="refNo" th:value="${data['refNo']}"/>
             <input type="hidden" name="merchantId" th:value="${data['merchantId']}"/>
             <input type="hidden" name="customerEmail" th:value="${data['customerEmail']}"/>
-<!--            <input type="hidden" name="cc" th:value="${data['cc']}"/>-->
             <input type="hidden" name="total" th:value="${data['total']}"/>
             <input type="hidden" name="channel" th:value="${data['channel']}"/>
             <input type="hidden" name="returnUrl" th:value="${data['returnUrl']}"/>

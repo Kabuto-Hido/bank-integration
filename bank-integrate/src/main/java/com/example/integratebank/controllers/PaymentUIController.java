@@ -30,7 +30,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,6 +42,10 @@ public class PaymentUIController {
 
     private final KBANKClient kbankClient;
 
+    /**
+     * @param model Model
+     * @return ui prepare payment
+     */
     @GetMapping("/pay")
     public String pay(Model model) {
         List<String> providers = Arrays.asList(PaymentProvider.SCB.name(), PaymentProvider.KBANK.name());
@@ -52,6 +55,12 @@ public class PaymentUIController {
         return "pay";
     }
 
+    /**
+     * Receive payment data
+     * @param model Model
+     * @param paymentDto PaymentDTO
+     * @return UI
+     */
     @PostMapping("/do-pay")
     public String doPay(Model model, @ModelAttribute("paymentDto") PaymentDTO paymentDto) {
         Map<String, String> data = paymentService.createPayment(paymentDto);

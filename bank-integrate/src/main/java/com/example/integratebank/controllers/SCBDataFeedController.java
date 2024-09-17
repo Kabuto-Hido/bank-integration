@@ -27,7 +27,7 @@ public class SCBDataFeedController {
             return ResponseEntity.badRequest().body("Invalid request");
         }
 
-        paymentService.getKBANKInquiry(dto.getData().getAuthorizeResponse().getOrderNumber());
+        paymentService.getSCBInquiry(dto.getData().getAuthorizeResponse().getOrderNumber());
         return ResponseEntity.ok("OK");
     }
 }
