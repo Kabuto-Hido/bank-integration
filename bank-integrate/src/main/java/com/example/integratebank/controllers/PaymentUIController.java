@@ -26,8 +26,11 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -126,7 +129,7 @@ public class PaymentUIController {
             return "redirect:/paysuccess?ref=" + orderNumber;
         }
 
-        return "fail";
+        return "redirect:/fail?ref=" + orderNumber;
     }
 
     /**
@@ -213,14 +216,32 @@ public class PaymentUIController {
     @GetMapping("/fail")
     public String failPage(Model model,
                               @RequestParam(value = "ref", required = false) String ref) {
+        // Check transaction id and status code is not null
+        if (StringUtils.isEmpty(ref)) {
+            Date currDate = Date.from(Instant.now());
+            model.addAttribute("time", formatTime(currDate));
+            model.addAttribute("date", formatDate(currDate));
+            return "fail";
+        }
+
+        // Check is payment exist
+        Optional<Payment> paymentOptional = paymentService.getPaymentByTransactionId(ref);
+        if (paymentOptional.isEmpty()) {
+            return "error";
+        }
+
+        Payment payment = paymentOptional.get();
+        model.addAttribute("time", formatTime(Timestamp.valueOf(payment.getCreateDate())));
+        model.addAttribute("date", formatDate(Timestamp.valueOf(payment.getCreateDate())));
+        model.addAttribute("transactionId", payment.getTransactionId());
         return "fail";
     }
 
     /**
-     * Handle page fail
+     * Handle page cancel
      * @param model Model
      * @param ref String
-     * @return UI Page fail
+     * @return UI Page cancel
      */
     @GetMapping("/cancel")
     public String cancelPage(Model model,
@@ -239,5 +260,15 @@ public class PaymentUIController {
                                              .paymentStatus(PaymentStatus.CANCEL).build();
         paymentService.updateStatus(datafeedDTO, null);
         return "cancel";
+    }
+
+    private String formatDate(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MMM/yyyy");
+        return formatter.format(date);
+    }
+
+    private String formatTime(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
+        return formatter.format(date);
     }
 }

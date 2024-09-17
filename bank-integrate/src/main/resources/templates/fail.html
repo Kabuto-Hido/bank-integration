@@ -3,8 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <title>Payment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #B5EAEA;
+            margin: 0;
+            padding: 0;
+        }
+
+        #wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .form-section {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .form-card {
+            padding: 40px;
+            border: none;
+            background-color: #f0fdfd;
+        }
+
+        .card-body {
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #205072;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #205072;
+            margin-bottom: 20px;
+        }
+
+        .fail-detail span {
+            display: block;
+            font-size: 16px;
+            color: #FF4C4C; /* Highlighting with red for failure detail */
+            margin-bottom: 10px;
+        }
+
+        strong {
+            font-weight: 700;
+        }
+
+        .icon-cross-circle {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background-color: #FF4C4C;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .icon-cross-circle::before {
+            content: "X"; /* Cross symbol */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 24px;
+        }
+
+        .text-center {
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
-FAIL
+    <div id="wrapper" class="payment-page">
+        <div class="content-wrapper">
+            <main id="main">
+                <div class="form-section container-fluid">
+                    <form action="#" class="form-card card payment-failed">
+                        <div class="card-body">
+                            <div class="heading-bar">
+                                <i class="icon-cross-circle"></i>
+                                <h1>Payment Failed</h1>
+                                <p>We just tried to charge your Credit Card, but unfortunately the Payment did not go through.</p>
+                                <div class="mb-4 text-center fail-detail">
+                                    <span th:if="${transactionId != null}">
+                                        TransactionID: <strong th:text="${transactionId}"></strong>
+                                    </span>
+                                    <span th:if="${time != null}">Time: <strong th:text="${time}"></strong></span>
+                                    <span th:if="${date != null}">Date: <strong th:text="${date}"></strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
 </body>
 </html>
