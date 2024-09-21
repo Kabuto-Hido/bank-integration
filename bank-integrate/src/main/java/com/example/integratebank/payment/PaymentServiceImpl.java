@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -77,6 +78,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Value("${scb.inquiry.url}")
     private String scbInquiryUrl;
+
+    @Value("${payment.expire.time}")
+    private long expiredTime;
 
     /**
      * create payment transaction
@@ -212,10 +216,11 @@ public class PaymentServiceImpl implements PaymentService {
         // prepare inquiry request dto
         SCBInquiryRequestDTO scbInquiryRequestDTO = new SCBInquiryRequestDTO(scbMerchantId, transactionId);
 
-        SCBInquiryResponseDTO scbInquiryResponseDTO = scbClient.getTransactionInquiry(scbInquiryUrl, scbInquiryRequestDTO)
-                                                               .orElseThrow(() -> new BadRequest("Inquiry not found"));
-
-        processDataFeed(transactionId, scbInquiryResponseDTO);
+        scbClient.getTransactionInquiry(scbInquiryUrl, scbInquiryRequestDTO)
+                 .ifPresentOrElse(
+                         scbInquiryResponseDTO -> processDataFeed(transactionId, scbInquiryResponseDTO),
+                         () -> expiredPayment(transactionId)
+                 );
     }
 
     /**
@@ -276,6 +281,12 @@ public class PaymentServiceImpl implements PaymentService {
                          });
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<Payment> getPaymentByProviderAndStatus(PaymentProvider provider, PaymentStatus status) {
+        return paymentRepository.findByProviderAndStatus(provider, status);
+    }
+
     /**
      * mapping SCB status code of bank to payment status
      * @param statusCode String
@@ -298,10 +309,11 @@ public class PaymentServiceImpl implements PaymentService {
      */
     @Override
     public void getKBANKInquiry(String transactionId) {
-        KBANKInquiryResponseDTO kbankInquiryResponseDTO = kbankClient.getPaymentStatus(transactionId)
-                                                                     .orElseThrow(() -> new BadRequest("Inquiry not found"));
-
-        processKBANKDataFeed(transactionId, kbankInquiryResponseDTO);
+        kbankClient.getPaymentStatus(transactionId)
+                   .ifPresentOrElse(
+                           kbankInquiryResponseDTO -> processKBANKDataFeed(transactionId, kbankInquiryResponseDTO),
+                           () -> expiredPayment(transactionId)
+                   );
     }
 
     /**
@@ -343,5 +355,27 @@ public class PaymentServiceImpl implements PaymentService {
             case CANCEL -> PaymentStatus.CANCEL;
             default -> PaymentStatus.PENDING;
         };
+    }
+
+    /**
+     * Expired payment
+     * @param transactionId String
+     */
+    private void expiredPayment(String transactionId) {
+        LocalDateTime time = LocalDateTime.now().minusSeconds(expiredTime);
+
+        paymentRepository.findByTransactionId(transactionId)
+                         .ifPresent(payment -> {
+                             if (payment.getStatus() != PaymentStatus.PENDING) {
+                                 return;
+                             }
+
+                             if (payment.getCreateDate().isAfter(time)) {
+                                 return;
+                             }
+
+                             payment.setStatus(PaymentStatus.EXPIRED);
+                             paymentRepository.save(payment);
+                         });
     }
 }
